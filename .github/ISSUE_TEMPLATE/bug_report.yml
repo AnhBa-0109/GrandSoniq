@@ -1,0 +1,49 @@
+name: Báo lỗi (Bug Report)
+description: Báo cáo lỗi hoặc hành vi không mong muốn trong ứng dụng
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Cảm ơn bạn đã báo lỗi! Vui lòng điền đầy đủ thông tin bên dưới để nhóm dễ tái hiện và xử lý.
+  - type: textarea
+    id: description
+    attributes:
+      label: Mô tả lỗi
+      description: Mô tả rõ ràng lỗi đang gặp phải là gì.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Các bước tái hiện
+      description: Liệt kê từng bước để tái hiện lại lỗi.
+      placeholder: |
+        1. Mở màn hình '...'
+        2. Nhấn vào '...'
+        3. Lỗi xảy ra...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Kết quả mong đợi
+      description: Lẽ ra ứng dụng phải hoạt động như thế nào?
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Môi trường / Thiết bị
+      description: Thiết bị, phiên bản Android hoặc Emulator đang sử dụng.
+      placeholder: "VD: Pixel 7 Emulator, Android 14 (API 34)"
+    validations:
+      required: false
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logcat / Ảnh chụp màn hình (nếu có)
+      description: Dán stack trace từ Logcat hoặc kéo thả ảnh chụp màn hình vào đây.
+    validations:
+      required: false

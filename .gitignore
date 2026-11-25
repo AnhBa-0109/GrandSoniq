@@ -1,0 +1,47 @@
+# Gradle & build outputs
+.gradle/
+.kotlin/
+build/
+/build
+*/build/
+/captures
+.externalNativeBuild/
+.cxx/
+
+# Android artifacts
+*.apk
+*.ap_
+*.aab
+*.dex
+*.class
+
+# Local config & secrets (do NOT commit)
+/local.properties
+local.properties
+*.jks
+*.keystore
+keystore.properties
+
+# IntelliJ / Android Studio personal files
+*.iml
+/.idea/caches
+/.idea/libraries
+/.idea/modules.xml
+/.idea/workspace.xml
+/.idea/navEditor.xml
+/.idea/assetWizardSettings.xml
+/.idea/shelf/
+/.idea/deploymentTargetSelector.xml
+/.idea/deviceManager.xml
+/.idea/appInsightsSettings.xml
+/.idea/runConfigurations/
+
+# OS & temporary files
+.DS_Store
+Thumbs.db
+desktop.ini
+*.log
+*.tmp
+*.swp
+*~
+

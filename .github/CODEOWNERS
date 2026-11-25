@@ -1,0 +1,9 @@
+# Tự động chỉ định người review cho từng khu vực của repository.
+# Bỏ dấu '#' và thay @username bằng GitHub username thật của các thành viên trong nhóm.
+
+# Mặc định cho toàn bộ repo:
+# * @lead-username
+
+# Cấu hình build / CI:
+# /.github/ @devops-username
+# /gradle/ @lead-username
