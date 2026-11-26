@@ -2,6 +2,7 @@ package ntu.ntth.grandsoniq.core.model
 
 /**
  * Phòng nghe nhạc chung đồng bộ thời gian thực (Firestore collection: `listeningRooms`).
+ * Dùng `toListeningRoomSafe()` trong `core.network.FirestoreMappers` khi đọc từ Firestore để tránh lỗi `Timestamp -> Long`.
  */
 data class ListeningRoom(
     val id: String = "",

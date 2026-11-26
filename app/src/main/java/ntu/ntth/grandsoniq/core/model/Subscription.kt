@@ -2,6 +2,7 @@ package ntu.ntth.grandsoniq.core.model
 
 /**
  * Giao dịch và gói đăng ký Premium (Firestore collection: `subscriptions`).
+ * Dùng `toSubscriptionSafe()` trong `core.network.FirestoreMappers` khi đọc từ Firestore để tránh lỗi `Timestamp -> Long`.
  */
 data class Subscription(
     val id: String = "",

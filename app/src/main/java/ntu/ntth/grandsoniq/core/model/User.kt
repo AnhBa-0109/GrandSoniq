@@ -3,6 +3,7 @@ package ntu.ntth.grandsoniq.core.model
 /**
  * Tài khoản người dùng (Firestore collection: `users`, Document ID = `uid`).
  * Các trường `Timestamp` lưu dưới dạng epoch milliseconds (`Long`).
+ * Dùng `toUserSafe()` trong `core.network.FirestoreMappers` khi đọc từ Firestore để tránh lỗi `Timestamp -> Long`.
  */
 data class User(
     val uid: String = "",
