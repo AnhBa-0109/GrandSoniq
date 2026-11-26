@@ -9,15 +9,15 @@ plugins {
 android {
     namespace = "ntu.ntth.grandsoniq"
     compileSdk {
-        version = release(36) {
+        version = release(37) {
             minorApiLevel = 1
         }
     }
 
     defaultConfig {
         applicationId = "ntu.ntth.grandsoniq"
-        minSdk = 26
-        targetSdk = 36
+        minSdk = 24
+        targetSdk = 37
         versionCode = 1
         versionName = "1.0"
 
