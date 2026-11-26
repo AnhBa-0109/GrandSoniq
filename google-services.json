@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "110747047966",
+    "project_id": "grandsoniq",
+    "storage_bucket": "grandsoniq.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:110747047966:android:16902c635ea38e8a70b60f",
+        "android_client_info": {
+          "package_name": "ntu.ntth.grandsoniq"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAVnkrPT1RkksxCIkXgiH4goytLGQjyq3o"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
