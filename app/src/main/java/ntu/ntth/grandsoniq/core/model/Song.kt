@@ -2,6 +2,8 @@ package ntu.ntth.grandsoniq.core.model
 
 /**
  * Bài hát (Firestore collection: `songs`).
+ * Lưu ý: Dùng `toSongSafe()` trong `core.network.FirestoreMappers` khi đọc từ Firestore để chuyển
+ * `Timestamp` sang `Long` an toàn, tránh crash khi gọi `toObject()`.
  */
 data class Song(
     val id: String = "",

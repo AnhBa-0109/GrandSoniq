@@ -2,6 +2,7 @@ package ntu.ntth.grandsoniq.core.model
 
 /**
  * Album âm nhạc (Firestore collection: `albums`).
+ * Dùng `toAlbumSafe()` trong `core.network.FirestoreMappers` khi đọc từ Firestore để tránh lỗi `Timestamp -> Long`.
  */
 data class Album(
     val id: String = "",
