@@ -45,6 +45,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
@@ -52,15 +54,17 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
+import ntu.ntth.grandsoniq.R
 import ntu.ntth.grandsoniq.core.model.Song
 import ntu.ntth.grandsoniq.feature.discover.viewmodel.HomeUiState
 
-private val Background = Color(0xFF111514)
-private val Panel = Color(0xFF1B211E)
-private val ArtworkBackground = Color(0xFF303B32)
-private val Foreground = Color(0xFFF4F5F1)
-private val Muted = Color(0xFFB8BFB8)
-private val Accent = Color(0xFFDFFF73)
+private val Background = Color(0xFF101311)
+private val Panel = Color(0xFF191E1B)
+private val PlayerPanel = Color(0xFF242B26)
+private val ArtworkBackground = Color(0xFF191919)
+private val Foreground = Color(0xFFF3F5EF)
+private val Muted = Color(0xFFB2BBB4)
+private val Accent = Color(0xFFD5F47A)
 private val SidePadding = 20.dp
 
 @Composable
@@ -151,7 +155,7 @@ internal fun HomeScreen(state: HomeUiState, onRetry: () -> Unit) {
         if (selectedSong != null) {
             Row(
                 Modifier.fillMaxWidth().padding(horizontal = 10.dp)
-                    .clip(RoundedCornerShape(12.dp)).background(Panel).padding(8.dp),
+                    .clip(RoundedCornerShape(12.dp)).background(PlayerPanel).padding(8.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
@@ -160,13 +164,13 @@ internal fun HomeScreen(state: HomeUiState, onRetry: () -> Unit) {
             }
         }
         Row(
-            Modifier.fillMaxWidth().height(56.dp),
+            Modifier.fillMaxWidth().height(72.dp),
             horizontalArrangement = Arrangement.SpaceAround,
             verticalAlignment = Alignment.CenterVertically
         ) {
             HomeTab("Trang chủ", Icons.Filled.Home, Accent)
-            HomeTab("Khám phá", Icons.Outlined.Search, Muted)
-            HomeTab("Thư viện", Icons.Outlined.FavoriteBorder, Muted)
+            HomeTab("Khám phá", ImageVector.vectorResource(R.drawable.explore), Muted)
+            HomeTab("Thư viện", ImageVector.vectorResource(R.drawable.library_music), Muted)
             HomeTab("Bạn bè", Icons.Outlined.Person, Muted)
         }
     }
@@ -231,7 +235,11 @@ private fun ArtworkCard(title: String, subtitle: String, url: String, round: Boo
         Artwork(url, Modifier.size(size), if (round) CircleShape else RoundedCornerShape(8.dp))
         Column(Modifier.padding(top = 6.dp),
             horizontalAlignment = if (round) Alignment.CenterHorizontally else Alignment.Start) {
-            MediaText(title, subtitle)
+            MediaText(
+                title,
+                subtitle,
+                horizontalAlignment = if (round) Alignment.CenterHorizontally else Alignment.Start
+            )
         }
     }
 }
@@ -252,8 +260,8 @@ private fun Artwork(url: String, modifier: Modifier, shape: Shape) {
 }
 
 @Composable
-private fun MediaText(title: String, subtitle: String, titleColor: Color = Foreground) {
-    Column {
+private fun MediaText(title: String, subtitle: String, titleColor: Color = Foreground, horizontalAlignment: Alignment.Horizontal = Alignment.Start) {
+    Column(horizontalAlignment = horizontalAlignment) {
         Text(title, color = titleColor, fontSize = 14.sp, fontWeight = FontWeight.Medium,
             maxLines = 1, overflow = TextOverflow.Ellipsis)
         if (subtitle.isNotBlank()) {
