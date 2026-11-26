@@ -1,3 +1,13 @@
 package ntu.ntth.grandsoniq.feature.discover.viewmodel
 
-// StateFlow UiState cho màn hình Trang chủ & Khám phá.
+import ntu.ntth.grandsoniq.core.model.Album
+import ntu.ntth.grandsoniq.core.model.Artist
+import ntu.ntth.grandsoniq.core.model.Song
+
+internal data class HomeUiState(
+    val isLoading: Boolean = true,
+    val songs: List<Song> = emptyList(),
+    val albums: List<Album> = emptyList(),
+    val artists: List<Artist> = emptyList(),
+    val errorCodes: List<String> = emptyList()
+)
