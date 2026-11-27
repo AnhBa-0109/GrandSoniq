@@ -75,6 +75,8 @@ dependencies {
     implementation(libs.androidx.datastore.preferences)
 
     implementation(libs.coil.compose)
+    implementation(libs.coil.svg)
+    implementation(libs.lottie.compose)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

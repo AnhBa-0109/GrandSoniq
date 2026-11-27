@@ -1,5 +1,9 @@
 package ntu.ntth.grandsoniq.feature.discover.ui
 
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.updateTransition
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -7,15 +11,11 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.LazyRow
@@ -23,44 +23,42 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.outlined.FavoriteBorder
-import androidx.compose.material.icons.outlined.MoreVert
-import androidx.compose.material.icons.outlined.Notifications
-import androidx.compose.material.icons.outlined.Person
-import androidx.compose.material.icons.outlined.Search
+import androidx.compose.material.icons.filled.Equalizer
+import androidx.compose.material.icons.filled.MoreHoriz
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
-import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
+import com.airbnb.lottie.compose.LottieAnimation
+import com.airbnb.lottie.compose.LottieCompositionSpec
+import com.airbnb.lottie.compose.LottieConstants
+import com.airbnb.lottie.compose.rememberLottieComposition
 import ntu.ntth.grandsoniq.R
 import ntu.ntth.grandsoniq.core.model.Song
+import ntu.ntth.grandsoniq.core.ui.GrandSoniqHeader
 import ntu.ntth.grandsoniq.feature.discover.viewmodel.HomeUiState
 
 private val Background = Color(0xFF101311)
 private val Panel = Color(0xFF191E1B)
-private val PlayerPanel = Color(0xFF242B26)
 private val ArtworkBackground = Color(0xFF191919)
 private val Foreground = Color(0xFFF3F5EF)
 private val Muted = Color(0xFFB2BBB4)
@@ -68,19 +66,25 @@ private val Accent = Color(0xFFD5F47A)
 private val SidePadding = 20.dp
 
 @Composable
-internal fun HomeScreen(state: HomeUiState, onRetry: () -> Unit) {
-    var selectedSongId by rememberSaveable { mutableStateOf<String?>(null) }
-    val selectedSong = state.songs.firstOrNull { it.id == selectedSongId }
-        ?: state.songs.firstOrNull()
+internal fun HomeScreen(
+    state: HomeUiState,
+    onRetry: () -> Unit,
+    currentSongId: String? = null,
+    isPlaying: Boolean = false,
+    onPlaySong: ((Song) -> Unit)? = null
+) {
     val genres = state.songs.filter { it.genre.isNotBlank() }.distinctBy { it.genre }
 
-    Column(Modifier.fillMaxSize().background(Background).windowInsetsPadding(WindowInsets.safeDrawing)) {
+    Column(Modifier.fillMaxSize().background(Background)) {
+        GrandSoniqHeader(
+            title = stringResource(R.string.home_title),
+            modifier = Modifier.align(Alignment.CenterHorizontally)
+        )
         LazyColumn(
             modifier = Modifier.weight(1f),
             contentPadding = PaddingValues(top = 12.dp, bottom = 20.dp),
             verticalArrangement = Arrangement.spacedBy(24.dp)
         ) {
-            item { HomeHeader() }
             if (state.isLoading) {
                 item {
                     Box(Modifier.fillMaxWidth().padding(24.dp), contentAlignment = Alignment.Center) {
@@ -114,9 +118,12 @@ internal fun HomeScreen(state: HomeUiState, onRetry: () -> Unit) {
                         items(state.songs.chunked(3)) { songs ->
                             Column(verticalArrangement = Arrangement.spacedBy(7.dp)) {
                                 songs.forEach { song ->
-                                    SongTile(song, selectedSong?.id == song.id) {
-                                        selectedSongId = song.id
-                                    }
+                                    SongTile(
+                                        song = song,
+                                        current = currentSongId == song.id,
+                                        isPlaying = isPlaying,
+                                        onPlaySong = onPlaySong
+                                    )
                                 }
                             }
                         }
@@ -152,45 +159,7 @@ internal fun HomeScreen(state: HomeUiState, onRetry: () -> Unit) {
                 }
             }
         }
-        if (selectedSong != null) {
-            Row(
-                Modifier.fillMaxWidth().padding(horizontal = 10.dp)
-                    .clip(RoundedCornerShape(12.dp)).background(PlayerPanel).padding(8.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
-                Artwork(selectedSong.coverUrl, Modifier.size(36.dp), RoundedCornerShape(5.dp))
-                MediaText(selectedSong.title, selectedSong.artistName)
-            }
-        }
-        Row(
-            Modifier.fillMaxWidth().height(72.dp),
-            horizontalArrangement = Arrangement.SpaceAround,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            HomeTab("Trang chủ", Icons.Filled.Home, Accent)
-            HomeTab("Khám phá", ImageVector.vectorResource(R.drawable.explore), Muted)
-            HomeTab("Thư viện", ImageVector.vectorResource(R.drawable.library_music), Muted)
-            HomeTab("Bạn bè", Icons.Outlined.Person, Muted)
-        }
-    }
-}
 
-@Composable
-private fun HomeHeader() {
-    Row(
-        Modifier.fillMaxWidth().padding(horizontal = SidePadding),
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Box(Modifier.size(38.dp).background(ArtworkBackground, CircleShape), contentAlignment = Alignment.Center) {
-            Icon(Icons.Outlined.Person, contentDescription = null, tint = Accent)
-        }
-        Column(Modifier.weight(1f)) {
-            Text("Chào bạn", color = Muted, fontSize = 12.sp)
-            Text("Nhạc cho hôm nay", color = Foreground, fontSize = 25.sp, fontWeight = FontWeight.Bold)
-        }
-        Icon(Icons.Outlined.Notifications, contentDescription = null, tint = Foreground)
     }
 }
 
@@ -210,18 +179,65 @@ private fun HomeSection(title: String, content: LazyListScope.() -> Unit) {
 }
 
 @Composable
-private fun SongTile(song: Song, selected: Boolean, onSelect: () -> Unit) {
+private fun SongTile(song: Song, current: Boolean, isPlaying: Boolean, onPlaySong: ((Song) -> Unit)?) {
+    val playing = current && isPlaying
+    val titleColor by animateColorAsState(if (current) Accent else Color.White, label = "Song title")
+    val playbackDescription = stringResource(if (playing) R.string.home_now_playing else R.string.home_paused)
+    val clickModifier = if (onPlaySong != null) Modifier.clickable { onPlaySong(song) } else Modifier
+
     Row(
         Modifier.width(310.dp).clip(RoundedCornerShape(10.dp)).background(Panel)
-            .clickable(onClick = onSelect).padding(8.dp),
+            .then(clickModifier)
+            .semantics { if (current) stateDescription = playbackDescription }
+            .padding(8.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(9.dp)
     ) {
         Artwork(song.coverUrl, Modifier.size(48.dp), RoundedCornerShape(7.dp))
         Box(Modifier.weight(1f)) {
-            MediaText(song.title, song.artistName, if (selected) Accent else Foreground)
+            MediaText(song.title, song.artistName, titleColor)
         }
-        Icon(Icons.Outlined.MoreVert, contentDescription = null, tint = Muted, modifier = Modifier.size(16.dp))
+        PlaybackIndicator(playing)
+    }
+}
+
+@Composable
+private fun PlaybackIndicator(playing: Boolean) {
+    val transition = updateTransition(playing, label = "Playback icon")
+    val equalizerHeight by transition.animateFloat(
+        transitionSpec = { tween(durationMillis = 250) },
+        label = "Equalizer height"
+    ) { if (it) 1f else 0f }
+
+    Box(Modifier.size(24.dp), contentAlignment = Alignment.Center) {
+        Icon(
+            Icons.Filled.MoreHoriz,
+            contentDescription = null,
+            tint = Muted,
+            modifier = Modifier.graphicsLayer { alpha = 1f - equalizerHeight }
+        )
+        if (transition.currentState || transition.targetState) {
+            val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.playing_music))
+            Box(
+                Modifier.matchParentSize().graphicsLayer {
+                    scaleY = equalizerHeight
+                    alpha = equalizerHeight
+                },
+                contentAlignment = Alignment.Center
+            ) {
+                if (composition != null) {
+                    // Zoom past the transparent padding around the equalizer in the source artboard.
+                    LottieAnimation(
+                        composition,
+                        modifier = Modifier.size(24.dp).scale(7f),
+                        isPlaying = playing,
+                        iterations = LottieConstants.IterateForever
+                    )
+                } else {
+                    Icon(Icons.Filled.Equalizer, contentDescription = null, tint = Accent)
+                }
+            }
+        }
     }
 }
 
@@ -245,7 +261,7 @@ private fun ArtworkCard(title: String, subtitle: String, url: String, round: Boo
 }
 
 @Composable
-private fun Artwork(url: String, modifier: Modifier, shape: Shape) {
+internal fun Artwork(url: String, modifier: Modifier, shape: Shape) {
     Box(modifier.clip(shape).background(ArtworkBackground), contentAlignment = Alignment.Center) {
         Text("♫", color = Muted, fontSize = 20.sp)
         if (url.isNotBlank()) {
@@ -267,13 +283,5 @@ private fun MediaText(title: String, subtitle: String, titleColor: Color = Foreg
         if (subtitle.isNotBlank()) {
             Text(subtitle, color = Muted, fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
-    }
-}
-
-@Composable
-private fun HomeTab(label: String, icon: ImageVector, color: Color) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(3.dp)) {
-        Icon(icon, contentDescription = null, tint = color, modifier = Modifier.size(19.dp))
-        Text(label, color = color, fontSize = 11.sp)
     }
 }
