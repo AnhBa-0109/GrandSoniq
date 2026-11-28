@@ -1,7 +1,6 @@
 package ntu.ntth.grandsoniq.feature.discover.ui
 
 import androidx.compose.animation.animateColorAsState
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.core.updateTransition
@@ -25,14 +24,11 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.QueueMusic
-import androidx.compose.material.icons.outlined.MoreVert
-import androidx.compose.material.icons.outlined.Notifications
-import androidx.compose.material.icons.outlined.Person
+import androidx.compose.material.icons.filled.Equalizer
+import androidx.compose.material.icons.filled.MoreHoriz
 import androidx.compose.material.icons.rounded.Album
 import androidx.compose.material.icons.rounded.MusicNote
 import androidx.compose.material.icons.rounded.Person
-import androidx.compose.material.icons.filled.Equalizer
-import androidx.compose.material.icons.filled.MoreHoriz
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -46,6 +42,7 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
@@ -57,19 +54,19 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
-import ntu.ntth.grandsoniq.core.model.Album
-import ntu.ntth.grandsoniq.core.model.Artist
-import ntu.ntth.grandsoniq.core.model.Playlist
-import ntu.ntth.grandsoniq.core.model.Song
-import ntu.ntth.grandsoniq.core.ui.GrandSoniqBottomNavBar
-import ntu.ntth.grandsoniq.core.ui.MainNavTab
-import ntu.ntth.grandsoniq.core.ui.MiniPlayerBar
 import com.airbnb.lottie.compose.LottieAnimation
 import com.airbnb.lottie.compose.LottieCompositionSpec
 import com.airbnb.lottie.compose.LottieConstants
 import com.airbnb.lottie.compose.rememberLottieComposition
 import ntu.ntth.grandsoniq.R
+import ntu.ntth.grandsoniq.core.model.Album
+import ntu.ntth.grandsoniq.core.model.Artist
+import ntu.ntth.grandsoniq.core.model.Playlist
+import ntu.ntth.grandsoniq.core.model.Song
+import ntu.ntth.grandsoniq.core.ui.GrandSoniqBottomNavBar
 import ntu.ntth.grandsoniq.core.ui.GrandSoniqHeader
+import ntu.ntth.grandsoniq.core.ui.MainNavTab
+import ntu.ntth.grandsoniq.core.ui.MiniPlayerBar
 import ntu.ntth.grandsoniq.feature.discover.viewmodel.HomeUiState
 import ntu.ntth.grandsoniq.ui.theme.GrandSoniqTheme
 
@@ -88,7 +85,9 @@ internal fun HomeScreen(
     currentSongId: String? = null,
     isPlaying: Boolean = false,
     onPlaySong: ((Song) -> Unit)? = null,
-    onArtistClick: (String) -> Unit = {}
+    onAlbumClick: (String) -> Unit = {},
+    onArtistClick: (String) -> Unit = {},
+    onPlaylistClick: (String) -> Unit = {}
 ) {
     val genres = state.songs.filter { it.genre.isNotBlank() }.distinctBy { it.genre }
 
@@ -109,7 +108,6 @@ internal fun HomeScreen(
                     }
                 }
             }
-        
             if (state.errorCodes.isNotEmpty()) {
                 item {
                     Column(Modifier.padding(horizontal = SidePadding)) {
@@ -123,26 +121,26 @@ internal fun HomeScreen(
                 state.songs.isEmpty() && state.albums.isEmpty() &&
                 state.artists.isEmpty() && state.playlists.isEmpty()
             ) {
-                item     {
+                item {
                     Text(
                         "Chưa có bài hát, album hoặc nghệ sĩ.",
                         Modifier.padding(horizontal = SidePadding),
                         color = Muted
                     )
                 }
-                if (state.songs.isNotEmpty()) {
-                    item {
-                        HomeSection("Bắt đầu nghe") {
-                            items(state.songs.chunked(3)) { songs ->
-                                Column(verticalArrangement = Arrangement.spacedBy(7.dp)) {
-                                    songs.forEach { song ->
-                                        SongTile(
-                                            song = song,
-                                            current = currentSongId == song.id,
-                                            isPlaying = isPlaying,
-                                            onPlaySong = onPlaySong
-                                        )
-                                    }
+            }
+            if (state.songs.isNotEmpty()) {
+                item {
+                    HomeSection("Bắt đầu nghe") {
+                        items(state.songs.chunked(3)) { songs ->
+                            Column(verticalArrangement = Arrangement.spacedBy(7.dp)) {
+                                songs.forEach { song ->
+                                    SongTile(
+                                        song = song,
+                                        current = currentSongId == song.id,
+                                        isPlaying = isPlaying,
+                                        onPlaySong = onPlaySong
+                                    )
                                 }
                             }
                         }
@@ -159,7 +157,7 @@ internal fun HomeScreen(
                                     .filter(String::isNotBlank).joinToString(" · "),
                                 url = playlist.coverUrl,
                                 fallbackIcon = Icons.AutoMirrored.Rounded.QueueMusic,
-                                onPlaylistClick: (String) -> Unit = {}
+                                onClick = { onPlaylistClick(playlist.id) }
                             )
                         }
                     }
@@ -175,7 +173,7 @@ internal fun HomeScreen(
                                     .filter(String::isNotBlank).joinToString(" · "),
                                 url = album.coverUrl,
                                 fallbackIcon = Icons.Rounded.Album,
-                                onAlbumClick: (String) -> Unit = {}
+                                onClick = { onAlbumClick(album.id) }
                             )
                         }
                     }
@@ -206,7 +204,7 @@ internal fun HomeScreen(
                                 subtitle = "",
                                 url = song.coverUrl,
                                 fallbackIcon = Icons.Rounded.MusicNote,
-                                onSongClick: (Song) -> Unit = {}
+                                onClick = { onPlaySong?.invoke(song) }
                             )
                         }
                     }
@@ -220,8 +218,11 @@ internal fun HomeScreen(
 private fun HomeSection(title: String, content: LazyListScope.() -> Unit) {
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
         Text(
-            title, Modifier.padding(horizontal = SidePadding).semantics { heading() },
-            color = Foreground, fontSize = 21.sp, fontWeight = FontWeight.SemiBold
+            title,
+            Modifier.padding(horizontal = SidePadding).semantics { heading() },
+            color = Foreground,
+            fontSize = 21.sp,
+            fontWeight = FontWeight.SemiBold
         )
         LazyRow(
             contentPadding = PaddingValues(horizontal = SidePadding),
@@ -312,13 +313,15 @@ private fun ArtworkCard(
         horizontalAlignment = if (round) Alignment.CenterHorizontally else Alignment.Start
     ) {
         Artwork(
-    url = url,
-    modifier = Modifier.size(size),
-    shape = if (round) CircleShape else RoundedCornerShape(8.dp),
-    fallbackIcon = fallbackIcon
-))
-        Column(Modifier.padding(top = 6.dp),
-            horizontalAlignment = if (round) Alignment.CenterHorizontally else Alignment.Start) {
+            url = url,
+            modifier = Modifier.size(size),
+            shape = if (round) CircleShape else RoundedCornerShape(8.dp),
+            fallbackIcon = fallbackIcon
+        )
+        Column(
+            Modifier.padding(top = 6.dp),
+            horizontalAlignment = if (round) Alignment.CenterHorizontally else Alignment.Start
+        ) {
             MediaText(
                 title,
                 subtitle,
@@ -329,7 +332,12 @@ private fun ArtworkCard(
 }
 
 @Composable
-private fun Artwork(url: String, modifier: Modifier, shape: Shape, fallbackIcon: ImageVector) {
+internal fun Artwork(
+    url: String,
+    modifier: Modifier,
+    shape: Shape,
+    fallbackIcon: ImageVector = Icons.Rounded.MusicNote
+) {
     Box(modifier.clip(shape).background(ArtworkBackground), contentAlignment = Alignment.Center) {
         Icon(
             imageVector = fallbackIcon,
@@ -349,17 +357,34 @@ private fun Artwork(url: String, modifier: Modifier, shape: Shape, fallbackIcon:
 }
 
 @Composable
-private fun MediaText(title: String, subtitle: String, titleColor: Color = Foreground, horizontalAlignment: Alignment.Horizontal = Alignment.Start) {
+private fun MediaText(
+    title: String,
+    subtitle: String,
+    titleColor: Color = Foreground,
+    horizontalAlignment: Alignment.Horizontal = Alignment.Start
+) {
     Column(horizontalAlignment = horizontalAlignment) {
-        Text(title, color = titleColor, fontSize = 14.sp, fontWeight = FontWeight.Medium,
-            maxLines = 1, overflow = TextOverflow.Ellipsis)
+        Text(
+            title,
+            color = titleColor,
+            fontSize = 14.sp,
+            fontWeight = FontWeight.Medium,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
         if (subtitle.isNotBlank()) {
-            Text(subtitle, color = Muted, fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(
+                subtitle,
+                color = Muted,
+                fontSize = 12.sp,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
         }
     }
 }
 
-@Preview(showBackground = true, backgroundColor = 0xFF111514, heightDp = 820)
+@Preview(showBackground = true, backgroundColor = 0xFF101311, heightDp = 820)
 @Composable
 private fun HomeScreenPreview() {
     val sampleSongs = listOf(
@@ -385,8 +410,9 @@ private fun HomeScreenPreview() {
             Box(modifier = Modifier.weight(1f)) {
                 HomeScreen(
                     state = sampleState,
+                    onRetry = {},
                     currentSongId = "s1",
-                    onRetry = {}
+                    isPlaying = true
                 )
             }
             MiniPlayerBar(

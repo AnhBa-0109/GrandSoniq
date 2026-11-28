@@ -1,5 +1,6 @@
 package ntu.ntth.grandsoniq.navigation
 
+import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.assertIsNotSelected
 import androidx.compose.ui.test.assertIsSelected
@@ -27,7 +28,8 @@ class GrandSoniqNavigationTest {
         home.assertIsNotSelected()
         compose.onNodeWithText("Bài hát, nghệ sĩ, album…").assertExists()
         compose.onNodeWithContentDescription("Thông báo").assertExists()
-        compose.onNode(hasText("Thư viện") and isSelectable()).assertIsNotEnabled()
+        compose.onNode(hasText("Thư viện") and isSelectable()).assertIsEnabled()
+        compose.onNode(hasText("Bạn bè") and isSelectable()).assertIsNotEnabled()
 
         home.performClick()
         home.assertIsSelected()

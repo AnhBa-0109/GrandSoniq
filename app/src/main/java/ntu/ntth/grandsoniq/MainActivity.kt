@@ -30,7 +30,11 @@ class MainActivity : ComponentActivity() {
         val discover by lazy { ViewModelProvider(this)[DiscoverViewModel::class.java] }
         setContent {
             GrandSoniqTheme(darkTheme = true, dynamicColor = false) {
-                GrandSoniqNavHost(home, discover = { discover })
+                GrandSoniqNavHost(
+                    home = home,
+                    discover = { discover },
+                    playbackController = playbackController
+                )
             }
         }
     }
