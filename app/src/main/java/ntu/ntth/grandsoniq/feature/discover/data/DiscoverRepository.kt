@@ -11,6 +11,7 @@ internal class DiscoverRepository(
     fun songs() = read("songs")
     fun albums() = read("albums")
     fun artists() = read("artists")
+    fun playlists() = read("playlists")
 
     private fun read(collection: String): Task<QuerySnapshot> =
         firestore.collection(collection).limit(24).get(Source.SERVER)
