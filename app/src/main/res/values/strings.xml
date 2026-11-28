@@ -1,3 +1,23 @@
 <resources>
     <string name="app_name">GrandSoniq</string>
+    <string name="home_title">Nhạc cho hôm nay</string>
+    <string name="home_now_playing">Đang phát</string>
+    <string name="home_paused">Tạm dừng</string>
+    <string name="nav_discover">Khám phá</string>
+    <string name="nav_home">Trang chủ</string>
+    <string name="nav_library">Thư viện</string>
+    <string name="nav_friends">Bạn bè</string>
+    <string name="discover_search_hint">Bài hát, nghệ sĩ, album…</string>
+    <string name="discover_recognize">Nhận diện bài hát xung quanh</string>
+    <string name="header_notifications">Thông báo</string>
+    <string name="discover_genres">Thể loại</string>
+    <string name="discover_genres_empty">Chưa có thể loại.</string>
+    <string name="discover_genres_load_failed">Không tải được thể loại.</string>
+    <string name="discover_chart">Bảng xếp hạng</string>
+    <string name="discover_more">Xem thêm</string>
+    <string name="discover_releases">Mới phát hành</string>
+    <string name="discover_back">Quay lại</string>
+    <string name="discover_empty">Chưa có bài hát.</string>
+    <string name="discover_load_failed">Không tải được danh sách bài hát.</string>
+    <string name="discover_retry">Thử lại</string>
 </resources>
