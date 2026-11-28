@@ -7,8 +7,9 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.lifecycle.ViewModelProvider
 import dagger.hilt.android.AndroidEntryPoint
-import ntu.ntth.grandsoniq.feature.discover.ui.HomeScreen
+import ntu.ntth.grandsoniq.feature.discover.viewmodel.DiscoverViewModel
 import ntu.ntth.grandsoniq.feature.discover.viewmodel.HomeViewModel
+import ntu.ntth.grandsoniq.navigation.GrandSoniqNavHost
 import ntu.ntth.grandsoniq.ui.theme.GrandSoniqTheme
 
 @AndroidEntryPoint
@@ -20,10 +21,12 @@ class MainActivity : ComponentActivity() {
             navigationBarStyle = SystemBarStyle.dark(android.graphics.Color.TRANSPARENT)
         )
         val home = ViewModelProvider(this)[HomeViewModel::class.java]
+        val discover by lazy { ViewModelProvider(this)[DiscoverViewModel::class.java] }
         setContent {
             GrandSoniqTheme(darkTheme = true, dynamicColor = false) {
-                HomeScreen(home.state, home::reload)
+                GrandSoniqNavHost(home, discover = { discover })
             }
         }
     }
+
 }
