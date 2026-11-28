@@ -5,6 +5,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.lifecycle.ViewModelProvider
 import dagger.hilt.android.AndroidEntryPoint
 import ntu.ntth.grandsoniq.feature.player.service.PlaybackController
 import ntu.ntth.grandsoniq.feature.discover.viewmodel.DiscoverViewModel
