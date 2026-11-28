@@ -7,13 +7,19 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.lifecycle.ViewModelProvider
 import dagger.hilt.android.AndroidEntryPoint
+import ntu.ntth.grandsoniq.feature.player.service.PlaybackController
 import ntu.ntth.grandsoniq.feature.discover.viewmodel.DiscoverViewModel
 import ntu.ntth.grandsoniq.feature.discover.viewmodel.HomeViewModel
 import ntu.ntth.grandsoniq.navigation.GrandSoniqNavHost
 import ntu.ntth.grandsoniq.ui.theme.GrandSoniqTheme
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+
+    @Inject
+    lateinit var playbackController: PlaybackController
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge(
@@ -24,7 +30,11 @@ class MainActivity : ComponentActivity() {
         val discover by lazy { ViewModelProvider(this)[DiscoverViewModel::class.java] }
         setContent {
             GrandSoniqTheme(darkTheme = true, dynamicColor = false) {
-                GrandSoniqNavHost(home, discover = { discover })
+                GrandSoniqNavHost(
+                    home = home,
+                    discover = { discover },
+                    playbackController = playbackController
+                )
             }
         }
     }

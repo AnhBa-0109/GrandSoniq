@@ -23,8 +23,12 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.QueueMusic
 import androidx.compose.material.icons.filled.Equalizer
 import androidx.compose.material.icons.filled.MoreHoriz
+import androidx.compose.material.icons.rounded.Album
+import androidx.compose.material.icons.rounded.MusicNote
+import androidx.compose.material.icons.rounded.Person
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -38,6 +42,7 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
@@ -45,6 +50,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
@@ -53,9 +59,16 @@ import com.airbnb.lottie.compose.LottieCompositionSpec
 import com.airbnb.lottie.compose.LottieConstants
 import com.airbnb.lottie.compose.rememberLottieComposition
 import ntu.ntth.grandsoniq.R
+import ntu.ntth.grandsoniq.core.model.Album
+import ntu.ntth.grandsoniq.core.model.Artist
+import ntu.ntth.grandsoniq.core.model.Playlist
 import ntu.ntth.grandsoniq.core.model.Song
+import ntu.ntth.grandsoniq.core.ui.GrandSoniqBottomNavBar
 import ntu.ntth.grandsoniq.core.ui.GrandSoniqHeader
+import ntu.ntth.grandsoniq.core.ui.MainNavTab
+import ntu.ntth.grandsoniq.core.ui.MiniPlayerBar
 import ntu.ntth.grandsoniq.feature.discover.viewmodel.HomeUiState
+import ntu.ntth.grandsoniq.ui.theme.GrandSoniqTheme
 
 private val Background = Color(0xFF101311)
 private val Panel = Color(0xFF191E1B)
@@ -71,7 +84,10 @@ internal fun HomeScreen(
     onRetry: () -> Unit,
     currentSongId: String? = null,
     isPlaying: Boolean = false,
-    onPlaySong: ((Song) -> Unit)? = null
+    onPlaySong: ((Song) -> Unit)? = null,
+    onAlbumClick: (String) -> Unit = {},
+    onArtistClick: (String) -> Unit = {},
+    onPlaylistClick: (String) -> Unit = {}
 ) {
     val genres = state.songs.filter { it.genre.isNotBlank() }.distinctBy { it.genre }
 
@@ -102,7 +118,8 @@ internal fun HomeScreen(
                 }
             }
             if (!state.isLoading && state.errorCodes.isEmpty() &&
-                state.songs.isEmpty() && state.albums.isEmpty() && state.artists.isEmpty()
+                state.songs.isEmpty() && state.albums.isEmpty() &&
+                state.artists.isEmpty() && state.playlists.isEmpty()
             ) {
                 item {
                     Text(
@@ -130,12 +147,34 @@ internal fun HomeScreen(
                     }
                 }
             }
+            if (state.playlists.isNotEmpty()) {
+                item {
+                    HomeSection("Playlist gợi ý") {
+                        items(state.playlists, key = { it.id }) { playlist ->
+                            ArtworkCard(
+                                title = playlist.name,
+                                subtitle = listOf(playlist.ownerName, "${playlist.songIds.size} bài")
+                                    .filter(String::isNotBlank).joinToString(" · "),
+                                url = playlist.coverUrl,
+                                fallbackIcon = Icons.AutoMirrored.Rounded.QueueMusic,
+                                onClick = { onPlaylistClick(playlist.id) }
+                            )
+                        }
+                    }
+                }
+            }
             if (state.albums.isNotEmpty()) {
                 item {
                     HomeSection("Dành cho bạn") {
                         items(state.albums, key = { it.id }) { album ->
-                            ArtworkCard(album.title, listOf(album.artistName, "Album")
-                                .filter(String::isNotBlank).joinToString(" · "), album.coverUrl)
+                            ArtworkCard(
+                                title = album.title,
+                                subtitle = listOf(album.artistName, "Album")
+                                    .filter(String::isNotBlank).joinToString(" · "),
+                                url = album.coverUrl,
+                                fallbackIcon = Icons.Rounded.Album,
+                                onClick = { onAlbumClick(album.id) }
+                            )
                         }
                     }
                 }
@@ -144,7 +183,14 @@ internal fun HomeScreen(
                 item {
                     HomeSection("Nghệ sĩ") {
                         items(state.artists, key = { it.id }) { artist ->
-                            ArtworkCard(artist.name, "Nghệ sĩ", artist.avatarUrl, round = true)
+                            ArtworkCard(
+                                title = artist.name,
+                                subtitle = "Nghệ sĩ",
+                                url = artist.avatarUrl,
+                                round = true,
+                                fallbackIcon = Icons.Rounded.Person,
+                                onClick = { onArtistClick(artist.id) }
+                            )
                         }
                     }
                 }
@@ -153,13 +199,18 @@ internal fun HomeScreen(
                 item {
                     HomeSection("Khám phá các thể loại") {
                         items(genres, key = { it.genre }) { song ->
-                            ArtworkCard(song.genre, "", song.coverUrl)
+                            ArtworkCard(
+                                title = song.genre,
+                                subtitle = "",
+                                url = song.coverUrl,
+                                fallbackIcon = Icons.Rounded.MusicNote,
+                                onClick = { onPlaySong?.invoke(song) }
+                            )
                         }
                     }
                 }
             }
         }
-
     }
 }
 
@@ -167,8 +218,11 @@ internal fun HomeScreen(
 private fun HomeSection(title: String, content: LazyListScope.() -> Unit) {
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
         Text(
-            title, Modifier.padding(horizontal = SidePadding).semantics { heading() },
-            color = Foreground, fontSize = 21.sp, fontWeight = FontWeight.SemiBold
+            title,
+            Modifier.padding(horizontal = SidePadding).semantics { heading() },
+            color = Foreground,
+            fontSize = 21.sp,
+            fontWeight = FontWeight.SemiBold
         )
         LazyRow(
             contentPadding = PaddingValues(horizontal = SidePadding),
@@ -193,7 +247,7 @@ private fun SongTile(song: Song, current: Boolean, isPlaying: Boolean, onPlaySon
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(9.dp)
     ) {
-        Artwork(song.coverUrl, Modifier.size(48.dp), RoundedCornerShape(7.dp))
+        Artwork(song.coverUrl, Modifier.size(48.dp), RoundedCornerShape(7.dp), Icons.Rounded.MusicNote)
         Box(Modifier.weight(1f)) {
             MediaText(song.title, song.artistName, titleColor)
         }
@@ -242,15 +296,32 @@ private fun PlaybackIndicator(playing: Boolean) {
 }
 
 @Composable
-private fun ArtworkCard(title: String, subtitle: String, url: String, round: Boolean = false) {
+private fun ArtworkCard(
+    title: String,
+    subtitle: String,
+    url: String,
+    round: Boolean = false,
+    fallbackIcon: ImageVector = Icons.Rounded.MusicNote,
+    onClick: () -> Unit = {}
+) {
     val size = if (round) 128.dp else 148.dp
     Column(
-        Modifier.width(size),
+        Modifier
+            .width(size)
+            .clip(RoundedCornerShape(10.dp))
+            .clickable(onClick = onClick),
         horizontalAlignment = if (round) Alignment.CenterHorizontally else Alignment.Start
     ) {
-        Artwork(url, Modifier.size(size), if (round) CircleShape else RoundedCornerShape(8.dp))
-        Column(Modifier.padding(top = 6.dp),
-            horizontalAlignment = if (round) Alignment.CenterHorizontally else Alignment.Start) {
+        Artwork(
+            url = url,
+            modifier = Modifier.size(size),
+            shape = if (round) CircleShape else RoundedCornerShape(8.dp),
+            fallbackIcon = fallbackIcon
+        )
+        Column(
+            Modifier.padding(top = 6.dp),
+            horizontalAlignment = if (round) Alignment.CenterHorizontally else Alignment.Start
+        ) {
             MediaText(
                 title,
                 subtitle,
@@ -261,9 +332,19 @@ private fun ArtworkCard(title: String, subtitle: String, url: String, round: Boo
 }
 
 @Composable
-internal fun Artwork(url: String, modifier: Modifier, shape: Shape) {
+internal fun Artwork(
+    url: String,
+    modifier: Modifier,
+    shape: Shape,
+    fallbackIcon: ImageVector = Icons.Rounded.MusicNote
+) {
     Box(modifier.clip(shape).background(ArtworkBackground), contentAlignment = Alignment.Center) {
-        Text("♫", color = Muted, fontSize = 20.sp)
+        Icon(
+            imageVector = fallbackIcon,
+            contentDescription = null,
+            tint = Muted,
+            modifier = Modifier.size(28.dp)
+        )
         if (url.isNotBlank()) {
             AsyncImage(
                 model = url,
@@ -276,12 +357,73 @@ internal fun Artwork(url: String, modifier: Modifier, shape: Shape) {
 }
 
 @Composable
-private fun MediaText(title: String, subtitle: String, titleColor: Color = Foreground, horizontalAlignment: Alignment.Horizontal = Alignment.Start) {
+private fun MediaText(
+    title: String,
+    subtitle: String,
+    titleColor: Color = Foreground,
+    horizontalAlignment: Alignment.Horizontal = Alignment.Start
+) {
     Column(horizontalAlignment = horizontalAlignment) {
-        Text(title, color = titleColor, fontSize = 14.sp, fontWeight = FontWeight.Medium,
-            maxLines = 1, overflow = TextOverflow.Ellipsis)
+        Text(
+            title,
+            color = titleColor,
+            fontSize = 14.sp,
+            fontWeight = FontWeight.Medium,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
         if (subtitle.isNotBlank()) {
-            Text(subtitle, color = Muted, fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(
+                subtitle,
+                color = Muted,
+                fontSize = 12.sp,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
+    }
+}
+
+@Preview(showBackground = true, backgroundColor = 0xFF101311, heightDp = 820)
+@Composable
+private fun HomeScreenPreview() {
+    val sampleSongs = listOf(
+        Song(id = "s1", title = "Sau cơn mưa", artistName = "An Nhiên", genre = "Indie"),
+        Song(id = "s2", title = "Đèn phố", artistName = "Hải Nam", genre = "Ballad"),
+        Song(id = "s3", title = "Một ngày nhẹ tênh", artistName = "Mây Xanh", genre = "Lofi")
+    )
+    val sampleState = HomeUiState(
+        isLoading = false,
+        songs = sampleSongs,
+        playlists = listOf(
+            Playlist(id = "pl_1", name = "Đường về nhà", ownerName = "Minh Anh", songIds = List(14) { "s$it" })
+        ),
+        albums = listOf(
+            Album(id = "alb_1", title = "Sau Cơn Mưa", artistName = "An Nhiên")
+        ),
+        artists = listOf(
+            Artist(id = "art_1", name = "An Nhiên", isVerified = true)
+        )
+    )
+    GrandSoniqTheme(darkTheme = true, dynamicColor = false) {
+        Column(modifier = Modifier.fillMaxSize().background(Background)) {
+            Box(modifier = Modifier.weight(1f)) {
+                HomeScreen(
+                    state = sampleState,
+                    onRetry = {},
+                    currentSongId = "s1",
+                    isPlaying = true
+                )
+            }
+            MiniPlayerBar(
+                song = sampleSongs.first(),
+                isPlaying = true,
+                progress = 0.3f,
+                onTogglePlayPause = {},
+                onNext = {},
+                onClick = {}
+            )
+            GrandSoniqBottomNavBar(selectedTab = MainNavTab.HOME, onTabSelected = {})
         }
     }
 }

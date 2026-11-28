@@ -12,6 +12,7 @@ internal class DiscoverRepository(
     fun songs() = read("songs")
     fun albums() = read("albums")
     fun artists() = read("artists")
+    fun playlists() = read("playlists")
     fun genres() = firestore.collection("genres").get(Source.SERVER)
 
     fun chartSongs() = firestore.collection("songs")

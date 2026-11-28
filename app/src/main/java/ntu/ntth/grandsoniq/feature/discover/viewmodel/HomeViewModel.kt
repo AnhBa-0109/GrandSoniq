@@ -8,9 +8,10 @@ import com.google.android.gms.tasks.Task
 import com.google.android.gms.tasks.Tasks
 import com.google.firebase.firestore.FirebaseFirestoreException
 import com.google.firebase.firestore.QuerySnapshot
-import ntu.ntth.grandsoniq.core.model.Album
-import ntu.ntth.grandsoniq.core.model.Artist
-import ntu.ntth.grandsoniq.core.model.Song
+import ntu.ntth.grandsoniq.core.network.toAlbumSafe
+import ntu.ntth.grandsoniq.core.network.toArtistSafe
+import ntu.ntth.grandsoniq.core.network.toPlaylistSafe
+import ntu.ntth.grandsoniq.core.network.toSongSafe
 import ntu.ntth.grandsoniq.feature.discover.data.DiscoverRepository
 
 internal class HomeViewModel : ViewModel() {
@@ -28,39 +29,19 @@ internal class HomeViewModel : ViewModel() {
         val songs = repository.songs()
         val albums = repository.albums()
         val artists = repository.artists()
+        val playlists = repository.playlists()
 
-        Tasks.whenAllComplete(songs, albums, artists).addOnSuccessListener {
+        Tasks.whenAllComplete(songs, albums, artists, playlists).addOnSuccessListener {
             if (cleared) return@addOnSuccessListener
             state = HomeUiState(
                 isLoading = false,
-                songs = songs.documents().map { doc ->
-                    val fields = doc.data
-                    Song(
-                        id = doc.id,
-                        title = fields["title"] as? String ?: doc.id,
-                        artistName = (fields["artistName"] as? String).orEmpty(),
-                        coverUrl = (fields["coverUrl"] as? String).orEmpty(),
-                        genre = (fields["genre"] as? String).orEmpty()
-                    )
-                },
-                albums = albums.documents().map { doc ->
-                    val fields = doc.data
-                    Album(
-                        id = doc.id,
-                        title = fields["title"] as? String ?: doc.id,
-                        artistName = (fields["artistName"] as? String).orEmpty(),
-                        coverUrl = (fields["coverUrl"] as? String).orEmpty()
-                    )
-                },
-                artists = artists.documents().map { doc ->
-                    val fields = doc.data
-                    Artist(
-                        id = doc.id,
-                        name = fields["name"] as? String ?: doc.id,
-                        avatarUrl = (fields["avatarUrl"] as? String).orEmpty()
-                    )
-                },
-                errorCodes = listOf(songs, albums, artists).filterNot { it.isSuccessful }
+                songs = songs.documents().mapNotNull { it.toSongSafe() },
+                albums = albums.documents().mapNotNull { it.toAlbumSafe() },
+                artists = artists.documents().mapNotNull { it.toArtistSafe() },
+                playlists = playlists.documents().mapNotNull { it.toPlaylistSafe() }
+                    .filter { it.isPublic },
+                errorCodes = listOf(songs, albums, artists, playlists)
+                    .filterNot { it.isSuccessful }
                     .map { (it.exception as? FirebaseFirestoreException)?.code?.name ?: "UNKNOWN" }
                     .distinct()
             )
