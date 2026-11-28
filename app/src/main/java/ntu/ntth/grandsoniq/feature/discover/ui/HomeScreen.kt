@@ -1,6 +1,7 @@
 package ntu.ntth.grandsoniq.feature.discover.ui
 
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.core.updateTransition
@@ -68,7 +69,6 @@ import com.airbnb.lottie.compose.LottieCompositionSpec
 import com.airbnb.lottie.compose.LottieConstants
 import com.airbnb.lottie.compose.rememberLottieComposition
 import ntu.ntth.grandsoniq.R
-import ntu.ntth.grandsoniq.core.model.Song
 import ntu.ntth.grandsoniq.core.ui.GrandSoniqHeader
 import ntu.ntth.grandsoniq.feature.discover.viewmodel.HomeUiState
 import ntu.ntth.grandsoniq.ui.theme.GrandSoniqTheme
@@ -87,7 +87,8 @@ internal fun HomeScreen(
     onRetry: () -> Unit,
     currentSongId: String? = null,
     isPlaying: Boolean = false,
-    onPlaySong: ((Song) -> Unit)? = null
+    onPlaySong: ((Song) -> Unit)? = null,
+    onArtistClick: (String) -> Unit = {}
 ) {
     val genres = state.songs.filter { it.genre.isNotBlank() }.distinctBy { it.genre }
 
@@ -108,112 +109,110 @@ internal fun HomeScreen(
                     }
                 }
             }
-        }
-        if (state.errorCodes.isNotEmpty()) {
-            item {
-                Column(Modifier.padding(horizontal = SidePadding)) {
-                    Text("Không tải được dữ liệu Firestore", color = Foreground)
-                    Text(state.errorCodes.joinToString(), color = Muted, fontSize = 13.sp)
-                    TextButton(onClick = onRetry) { Text("Thử lại", color = Accent) }
+        
+            if (state.errorCodes.isNotEmpty()) {
+                item {
+                    Column(Modifier.padding(horizontal = SidePadding)) {
+                        Text("Không tải được dữ liệu Firestore", color = Foreground)
+                        Text(state.errorCodes.joinToString(), color = Muted, fontSize = 13.sp)
+                        TextButton(onClick = onRetry) { Text("Thử lại", color = Accent) }
+                    }
                 }
             }
-        }
-        if (!state.isLoading && state.errorCodes.isEmpty() &&
-            state.songs.isEmpty() && state.albums.isEmpty() &&
-            state.artists.isEmpty() && state.playlists.isEmpty()
-        ) {
-            item {
-                Text(
-                    "Chưa có bài hát, album hoặc nghệ sĩ.",
-                    Modifier.padding(horizontal = SidePadding),
-                    color = Muted
-                )
-            }
-            if (state.songs.isNotEmpty()) {
-                item {
-                    HomeSection("Bắt đầu nghe") {
-                        items(state.songs.chunked(3)) { songs ->
-                            Column(verticalArrangement = Arrangement.spacedBy(7.dp)) {
-                                songs.forEach { song ->
-                                    SongTile(
-                                        song = song,
-                                        current = currentSongId == song.id,
-                                        isPlaying = isPlaying,
-                                        onPlaySong = onPlaySong
-                                    )
+            if (!state.isLoading && state.errorCodes.isEmpty() &&
+                state.songs.isEmpty() && state.albums.isEmpty() &&
+                state.artists.isEmpty() && state.playlists.isEmpty()
+            ) {
+                item     {
+                    Text(
+                        "Chưa có bài hát, album hoặc nghệ sĩ.",
+                        Modifier.padding(horizontal = SidePadding),
+                        color = Muted
+                    )
+                }
+                if (state.songs.isNotEmpty()) {
+                    item {
+                        HomeSection("Bắt đầu nghe") {
+                            items(state.songs.chunked(3)) { songs ->
+                                Column(verticalArrangement = Arrangement.spacedBy(7.dp)) {
+                                    songs.forEach { song ->
+                                        SongTile(
+                                            song = song,
+                                            current = currentSongId == song.id,
+                                            isPlaying = isPlaying,
+                                            onPlaySong = onPlaySong
+                                        )
+                                    }
                                 }
                             }
                         }
                     }
                 }
             }
-        }
-        if (state.playlists.isNotEmpty()) {
-            item {
-                HomeSection("Playlist gợi ý") {
-                    items(state.playlists, key = { it.id }) { playlist ->
-                        ArtworkCard(
-                            title = playlist.name,
-                            subtitle = listOf(playlist.ownerName, "${playlist.songIds.size} bài")
-                                .filter(String::isNotBlank).joinToString(" · "),
-                            url = playlist.coverUrl,
-                            fallbackIcon = Icons.AutoMirrored.Rounded.QueueMusic,
-                            onClick = { onPlaylistClick(playlist.id) }
-                        )
+            if (state.playlists.isNotEmpty()) {
+                item {
+                    HomeSection("Playlist gợi ý") {
+                        items(state.playlists, key = { it.id }) { playlist ->
+                            ArtworkCard(
+                                title = playlist.name,
+                                subtitle = listOf(playlist.ownerName, "${playlist.songIds.size} bài")
+                                    .filter(String::isNotBlank).joinToString(" · "),
+                                url = playlist.coverUrl,
+                                fallbackIcon = Icons.AutoMirrored.Rounded.QueueMusic,
+                                onPlaylistClick: (String) -> Unit = {}
+                            )
+                        }
+                    }
+                }
+            }
+            if (state.albums.isNotEmpty()) {
+                item {
+                    HomeSection("Dành cho bạn") {
+                        items(state.albums, key = { it.id }) { album ->
+                            ArtworkCard(
+                                title = album.title,
+                                subtitle = listOf(album.artistName, "Album")
+                                    .filter(String::isNotBlank).joinToString(" · "),
+                                url = album.coverUrl,
+                                fallbackIcon = Icons.Rounded.Album,
+                                onAlbumClick: (String) -> Unit = {}
+                            )
+                        }
+                    }
+                }
+            }
+            if (state.artists.isNotEmpty()) {
+                item {
+                    HomeSection("Nghệ sĩ") {
+                        items(state.artists, key = { it.id }) { artist ->
+                            ArtworkCard(
+                                title = artist.name,
+                                subtitle = "Nghệ sĩ",
+                                url = artist.avatarUrl,
+                                round = true,
+                                fallbackIcon = Icons.Rounded.Person,
+                                onClick = { onArtistClick(artist.id) }
+                            )
+                        }
+                    }
+                }
+            }
+            if (genres.isNotEmpty()) {
+                item {
+                    HomeSection("Khám phá các thể loại") {
+                        items(genres, key = { it.genre }) { song ->
+                            ArtworkCard(
+                                title = song.genre,
+                                subtitle = "",
+                                url = song.coverUrl,
+                                fallbackIcon = Icons.Rounded.MusicNote,
+                                onSongClick: (Song) -> Unit = {}
+                            )
+                        }
                     }
                 }
             }
         }
-        if (state.albums.isNotEmpty()) {
-            item {
-                HomeSection("Dành cho bạn") {
-                    items(state.albums, key = { it.id }) { album ->
-                        ArtworkCard(
-                            title = album.title,
-                            subtitle = listOf(album.artistName, "Album")
-                                .filter(String::isNotBlank).joinToString(" · "),
-                            url = album.coverUrl,
-                            fallbackIcon = Icons.Rounded.Album,
-                            onClick = { onAlbumClick(album.id) }
-                        )
-                    }
-                }
-            }
-        }
-        if (state.artists.isNotEmpty()) {
-            item {
-                HomeSection("Nghệ sĩ") {
-                    items(state.artists, key = { it.id }) { artist ->
-                        ArtworkCard(
-                            title = artist.name,
-                            subtitle = "Nghệ sĩ",
-                            url = artist.avatarUrl,
-                            round = true,
-                            fallbackIcon = Icons.Rounded.Person,
-                            onClick = { onArtistClick(artist.id) }
-                        )
-                    }
-                }
-            }
-        }
-        if (genres.isNotEmpty()) {
-            item {
-                HomeSection("Khám phá các thể loại") {
-                    items(genres, key = { it.genre }) { song ->
-                        ArtworkCard(
-                            title = song.genre,
-                            subtitle = "",
-                            url = song.coverUrl,
-                            fallbackIcon = Icons.Rounded.MusicNote,
-                            onClick = { onSongClick(song) }
-                        )
-                    }
-                }
-            }
-        }
-    }
-}
-
     }
 }
 
@@ -312,7 +311,12 @@ private fun ArtworkCard(
             .clickable(onClick = onClick),
         horizontalAlignment = if (round) Alignment.CenterHorizontally else Alignment.Start
     ) {
-        Artwork(url, Modifier.size(size), if (round) CircleShape else RoundedCornerShape(8.dp))
+        Artwork(
+    url = url,
+    modifier = Modifier.size(size),
+    shape = if (round) CircleShape else RoundedCornerShape(8.dp),
+    fallbackIcon = fallbackIcon
+))
         Column(Modifier.padding(top = 6.dp),
             horizontalAlignment = if (round) Alignment.CenterHorizontally else Alignment.Start) {
             MediaText(
@@ -379,7 +383,11 @@ private fun HomeScreenPreview() {
     GrandSoniqTheme(darkTheme = true, dynamicColor = false) {
         Column(modifier = Modifier.fillMaxSize().background(Background)) {
             Box(modifier = Modifier.weight(1f)) {
-                HomeScreen(state = sampleState, activeSongId = "s1", onRetry = {})
+                HomeScreen(
+                    state = sampleState,
+                    currentSongId = "s1",
+                    onRetry = {}
+                )
             }
             MiniPlayerBar(
                 song = sampleSongs.first(),
